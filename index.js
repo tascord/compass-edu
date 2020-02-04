@@ -11,13 +11,13 @@ class Compass extends EventEmitter {
     browser = null;
     page = null;
 
-    settings = {};
+    settings = {showChrome: false, pageDelay: 2500};
 
     constructor(school_prefix, settings) {
         
         super();
 
-        if(typeof school_prefix != 'string')
+        if(typeof school_prefix != 'string' && typeof school_prefix != 'undefined')
             throw(new Error(`Invalid type for school_prefix, ${typeof school_prefix} not string`));
 
         if(typeof settings != 'object' && typeof settings != 'undefined')
@@ -29,21 +29,12 @@ class Compass extends EventEmitter {
         this.BASE_URL = `https://${school_prefix}.compass.education/`;
         this.LOGIN_URL = `https://${school_prefix}.compass.education/login.aspx?sessionstate=disabled`;
 
-        if(!settings) {
-            
-            this.settings = {
-                showChrome: false,
-                pageDelay: 2500
-            }
+        if(settings != undefined) this.settings = settings;
 
-        } else {
-            
-            this.settings = settings;
+        if(!this.settings.showChrome) this.settings.showChrome = false;
+        if(!this.settings.pageDelay) this.settings.pageDelay = 2500;
 
-        }
-        
         this.init();
-
 
     }
 
@@ -67,6 +58,14 @@ class Compass extends EventEmitter {
         await this.page.click('input[name="button1"]')
             .catch((err) => { throw(new Error(`Unable to find the Sign in Button`)); });
         
+        await this.page.waitFor(this.settings.pageDelay);
+
+        const error = await this.page.evaluate(() => document.getElementById('username-error') ? document.getElementById('username-error').innerText : null);
+        
+        if(error != null) {
+            throw `Unable to log in, '${error}'`;
+        }
+            
         this.emit('logged-in')
 
         await this.page.waitFor(this.settings.pageDelay);
@@ -113,7 +112,7 @@ class Compass extends EventEmitter {
         
 
         this.browser = await p.launch({
-            headless: this.settings.showChrome
+            headless: !this.settings.showChrome
         });
 
         this.page = await this.browser.newPage();
