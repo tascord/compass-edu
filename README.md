@@ -9,7 +9,7 @@ An unofficial api for [Compass](https://compass.education) using [puppeteer!](ht
 
 ## Usage
 
-(Read The Docs)[https://tascord.gitbook.io/compass-edu/]
+[Read The Docs](https://tascord.gitbook.io/compass-edu/)
 
 ```
     var Compass = require('@tascord/compass');
