@@ -1,7 +1,7 @@
 Compass
 =========
 
-An unofficial api for (Compass)[https://compass.education] using (puppeteer!)[https://github.com/puppeteer/puppeteer]
+An unofficial api for [Compass](https://compass.education) using [puppeteer!](https://github.com/puppeteer/puppeteer)
 
 ## Installation
 
