@@ -92,8 +92,6 @@ class Compass extends EventEmitter {
 
         }
 
-        this.emit('retreived-classes');
-
         return classes;
 
     }
@@ -101,8 +99,6 @@ class Compass extends EventEmitter {
     async returnHome() {
 
         await this.page.goto(this.BASE_URL, { waitUntil: 'networkidle2' });
-
-        this.emit('home');
 
         await this.page.waitFor(this.settings.pageDelay);
         

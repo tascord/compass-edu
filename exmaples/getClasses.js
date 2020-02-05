@@ -12,13 +12,13 @@ const login = {username: "", password: ""};
 /* --------------------------------------------------------------------------- */
 
 // Create an instance of Compass
-const school = new Compass('https://[...].compass.education');
+const user = new Compass('https://[...].compass.education');
 
-// Wait until school is loaded in and ready to take instructions
-school.on('initialized', async () => {
+// Wait until user is loaded in and ready to take instructions
+user.on('initialized', async () => {
 
-    // Login to school with the login object defined above
-    await school.login(login)
+    // Login to user with the login object defined above
+    await user.login(login)
         .catch(error => {
 
             console.log("Error loggin in '" + error + "'");
@@ -27,7 +27,7 @@ school.on('initialized', async () => {
         });
     
     // Get and store todays classes in an array
-    var classes = await school.getClasses();
+    var classes = await user.getClasses();
 
     // List the classes
     console.table(classes);
