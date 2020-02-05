@@ -12,7 +12,7 @@ An unofficial api for [Compass](https://compass.education) using [puppeteer!](ht
 [Read The Docs](https://tascord.gitbook.io/compass-edu/)
 
 ```
-    var Compass = require('@tascord/compass');
+    var Compass = require('compass-edu');
 
     var user = new Compass('school_prefix');
   
