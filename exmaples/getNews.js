@@ -1,17 +1,23 @@
 /* --------------------------------------------------------------------------- */
 
 // Bring in the library
-const Compass = require("../index");
+const Compass = require("./compass");
 
 /* --------------------------------------------------------------------------- */
 
 // Create a login object
-const login = { username: "", password: "" };
+const login = {
+	username: "",
+	password: "",
+};
 
 /* --------------------------------------------------------------------------- */
 
 // Create an instance of Compass
-const user = new Compass("bunburyshs-wa");
+const user = new Compass("bunburyshs-wa", {
+	pageDelay: 1000,
+	showChrome: false,
+});
 
 // Wait until user is loaded in and ready to take instructions
 user.on("initialized", async () => {
@@ -22,10 +28,11 @@ user.on("initialized", async () => {
 	});
 
 	// Get and store todays classes in an array
-	var classes = await user.getClasses();
+	// var classes = await user.getClasses();
+	var news = await user.getNews();
 
-	// List the classes
-	console.table(classes);
+	// List the news
+	console.log(news);
 
 	process.exit(1);
 });
