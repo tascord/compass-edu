@@ -14,8 +14,8 @@ const login = {
 /* --------------------------------------------------------------------------- */
 
 // Create an instance of Compass
-const user = new Compass("bunburyshs-wa", {
-	pageDelay: 1000,
+const user = new Compass("SCHOOL_PREFIX", {
+	pageDelay: 2500,
 	showChrome: false,
 });
 

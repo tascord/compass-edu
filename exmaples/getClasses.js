@@ -11,7 +11,7 @@ const login = { username: "", password: "" };
 /* --------------------------------------------------------------------------- */
 
 // Create an instance of Compass
-const user = new Compass("bunburyshs-wa");
+const user = new Compass("SCHOOL_PREFIX");
 
 // Wait until user is loaded in and ready to take instructions
 user.on("initialized", async () => {
