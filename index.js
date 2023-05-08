@@ -1,124 +1,158 @@
-'use strict';
+"use strict";
 
-const p = require('puppeteer');
-const EventEmitter = require('events');
+const p = require("puppeteer");
+const EventEmitter = require("events");
 
 class Compass extends EventEmitter {
+	BASE_URL = null;
+	LOGIN_URL = null;
 
-    BASE_URL = null;
-    LOGIN_URL = null;
+	browser = null;
+	page = null;
 
-    browser = null;
-    page = null;
+	settings = { showChrome: false, pageDelay: 2500 };
 
-    settings = {showChrome: false, pageDelay: 2500};
+	constructor(school_prefix, settings) {
+		super();
 
-    constructor(school_prefix, settings) {
-        
-        super();
+		if (typeof school_prefix != "string" && typeof school_prefix != "undefined")
+			throw new Error(
+				`Invalid type for school_prefix, ${typeof school_prefix} not string`
+			);
 
-        if(typeof school_prefix != 'string' && typeof school_prefix != 'undefined')
-            throw(new Error(`Invalid type for school_prefix, ${typeof school_prefix} not string`));
+		if (typeof settings != "object" && typeof settings != "undefined")
+			throw new Error(
+				`Invalid type for settings, ${typeof settings} not object`
+			);
 
-        if(typeof settings != 'object' && typeof settings != 'undefined')
-            throw(new Error(`Invalid type for settings, ${typeof settings} not object`));
+		if (!school_prefix) throw new Error("Missing school_prefix constructor");
 
-        if(!school_prefix)
-            throw(new Error("Missing school_prefix constructor"));
+		this.BASE_URL = `https://${school_prefix}.compass.education/`;
+		this.LOGIN_URL = `https://${school_prefix}.compass.education/login.aspx?sessionstate=disabled`;
 
-        this.BASE_URL = `https://${school_prefix}.compass.education/`;
-        this.LOGIN_URL = `https://${school_prefix}.compass.education/login.aspx?sessionstate=disabled`;
+		if (settings != undefined) this.settings = settings;
 
-        if(settings != undefined) this.settings = settings;
+		if (!this.settings.showChrome) this.settings.showChrome = false;
+		if (!this.settings.pageDelay) this.settings.pageDelay = 2500;
 
-        if(!this.settings.showChrome) this.settings.showChrome = false;
-        if(!this.settings.pageDelay) this.settings.pageDelay = 2500;
+		this.init();
+	}
 
-        this.init();
+	async login(login) {
+		if (this.page == null) throw new Error(`Compass instance not initialized`);
 
-    }
+		await this.page
+			.goto(this.LOGIN_URL, { waitUntil: "networkidle2" })
+			.catch((err) => {
+				throw new Error(
+					`Unable to establish a link with LOGIN_URL (${this.LOGIN_URL})`
+				);
+			});
 
-    async login(login) {
+		/* Write Username & Password */
+		await this.page
+			.type('input[name="username"]', login.username, { delay: 5 })
+			.catch((err) => {
+				throw new Error(`Unable to find the Username Field`);
+			});
 
-        if(this.page == null)
-            throw(new Error(`Compass instance not initialized`))
+		await this.page
+			.type('input[name="password"]', login.password, { delay: 5 })
+			.catch((err) => {
+				throw new Error(`Unable to find the Password Field`);
+			});
 
-        await this.page.goto(this.LOGIN_URL, { waitUntil: 'networkidle2' })
-            .catch((err) => { throw(new Error(`Unable to establish a link with LOGIN_URL (${this.LOGIN_URL})`)); });
-        
-        /* Write Username & Password */
-        await this.page.type('input[name="username"]', login.username, { delay: 5 })
-            .catch((err) => { throw(new Error(`Unable to find the Username Field`)); });
+		await this.page.waitFor(500);
 
-        await this.page.type('input[name="password"]', login.password, { delay: 5 })
-        .catch((err) => { throw(new Error(`Unable to find the Password Field`)); });
-        
-        await this.page.waitFor(500);
+		await this.page.click('input[name="button1"]').catch((err) => {
+			throw new Error(`Unable to find the Sign in Button`);
+		});
 
-        await this.page.click('input[name="button1"]')
-            .catch((err) => { throw(new Error(`Unable to find the Sign in Button`)); });
-        
-        await this.page.waitFor(this.settings.pageDelay);
+		await this.page.waitFor(this.settings.pageDelay);
 
-        const error = await this.page.evaluate(() => document.getElementById('username-error') ? document.getElementById('username-error').innerText : null);
-        
-        if(error != null) {
-            throw `Unable to log in, '${error}'`;
-        }
-            
-        this.emit('logged-in')
+		const error = await this.page.evaluate(() =>
+			document.getElementById("username-error")
+				? document.getElementById("username-error").innerText
+				: null
+		);
 
-        await this.page.waitFor(this.settings.pageDelay);
-        
-    }
+		if (error != null) {
+			throw `Unable to log in, '${error}'`;
+		}
 
-    async getClasses() {
-       
-        const classText = await this.page.evaluate(() => [...document.querySelectorAll('.ext-evt-bd')].map(elem => elem.innerText));
-        var classes = [];
+		this.emit("logged-in");
 
-        for(var i in classText) {
+		await this.page.waitFor(this.settings.pageDelay);
+	}
 
-            var newClass = {};
+	async getClasses() {
+		const classText = await this.page.evaluate(() =>
+			[...document.querySelectorAll(".ext-evt-bd")].map(
+				(elem) => elem.innerText
+			)
+		);
+		var classes = [];
 
-            var classData = classText[i].split(' ');
+		for (var i in classText) {
+			var newClass = {};
 
-            newClass.time = classData[0].slice(0, -1);
-            newClass.name = classData[3];
-            newClass.room = classData[5];
-            newClass.teacher = classData[7];
+			var classData = classText[i].split(" ");
 
-            classes.push(newClass);
+			newClass.time = classData[0].slice(0, -1);
+			newClass.name = classData[3];
+			newClass.room = classData[5];
+			newClass.teacher = classData[7];
 
-        }
+			classes.push(newClass);
+		}
 
-        return classes;
+		return classes;
+	}
 
-    }
+	async getNews() {
+		const newsText = await this.page.evaluate(() =>
+			[...document.querySelectorAll(".newsfeed-newsItem")].map(
+				(elem) => elem.innerText
+			)
+		);
+		var news = [];
 
-    async returnHome() {
+		for (var i in newsText) {
+			var newNews = {};
 
-        await this.page.goto(this.BASE_URL, { waitUntil: 'networkidle2' });
+			var newsData = newsText[i].split("\n");
 
-        await this.page.waitFor(this.settings.pageDelay);
-        
-    }
+			newNews.time = newsData[0];
+			newNews.author = newsData[1];
+			newNews.title = newsData[4];
+			newNews.content = "";
 
-    async init() {
-        
+			for (let i = 5; i <= newsData.length - 1; i++) {
+				if (i != 5) newNews.content += "\n";
+				newNews.content += newsData[i];
+			}
 
-        this.browser = await p.launch({
-            headless: !this.settings.showChrome
-        });
+			news.push(newNews);
+		}
 
-        this.page = await this.browser.newPage();
+		return news;
+	}
 
-        this.emit('initialized');
+	async returnHome() {
+		await this.page.goto(this.BASE_URL, { waitUntil: "networkidle2" });
 
-    }
+		await this.page.waitFor(this.settings.pageDelay);
+	}
 
+	async init() {
+		this.browser = await p.launch({
+			headless: !this.settings.showChrome ? "new" : false,
+		});
 
+		this.page = await this.browser.newPage();
+
+		this.emit("initialized");
+	}
 }
-
 
 module.exports = Compass;
