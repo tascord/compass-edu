@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------- */
 
 // Bring in the library
-const Compass = require("./compass");
+const Compass = require("../index");
 
 /* --------------------------------------------------------------------------- */
 
@@ -27,8 +27,7 @@ user.on("initialized", async () => {
 		process.exit(1);
 	});
 
-	// Get and store todays classes in an array
-	// var classes = await user.getClasses();
+	// Get and store todays news in an array
 	var news = await user.getNews();
 
 	// List the news
